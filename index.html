@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGPA Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        select, input {
+            margin: 10px 0;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        label {
+            font-weight: bold;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .courses-container {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+            padding-right: 10px; /* Adjust for scrollbar width */
+        }
+        .course-grade {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .course-grade label {
+            flex: 1;
+        }
+        .course-grade select {
+            flex: 1;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SGPA Calculator</h1>
+        <div>
+            <label for="semester">Select Semester:</label>
+            <select id="semester" onchange="displayCourses()">
+                <option value="sem1">Semester 1</option>
+                <option value="sem2">Semester 2</option>
+                <option value="sem3">Semester 3</option>
+                <option value="sem4">Semester 4</option>
+                <option value="sem5">Semester 5</option>
+                <option value="sem6">Semester 6</option>
+                <option value="sem7">Semester 7</option>
+                <option value="sem8">Semester 8</option>
+                <option value="sem9">Semester 9</option>
+                <option value="sem10">Semester 10</option>
+            </select>
+        </div>
+        <div class="courses-container" id="courses-container"></div>
+        <button onclick="calculateSGPA()">Calculate SGPA</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const combined_credits = {
+    'CH1101': 3, 'CS1101': 4, 'ES1101': 4, 'HU1101': 2, 'HU1103': 2, 'LS1101': 3, 'LS1102': 3, 'MA1101': 4, 'PH1101': 3,
+    'CH2101': 2, 'CH2102': 2, 'CH2103': 3, 'ES2101': 3, 'ES2102': 4, 'LS2101': 2, 'LS2102': 3, 'LS2103': 2, 'MA2101': 4,
+    'MA2102': 3, 'MA2103': 3, 'PH2101': 2, 'PH2102': 2, 'PH2103': 3, 'CH3101': 4, 'CH3102': 4, 'CH3103': 4, 'CH3104': 4,
+    'CH3105': 4, 'CH3106': 4, 'CS3101': 4, 'CS3102': 4, 'ES3101': 4, 'ES3102': 4, 'ES3103': 4, 'ES3104': 4, 'ES3105': 4,
+    'LS3101': 4, 'LS3102': 4, 'LS3103': 4, 'LS3104': 4, 'LS3105': 4, 'LS3106': 4, 'MA3101': 4, 'MA3102': 4, 'MA3103': 4,
+    'MA3104': 4, 'MA3105': 4, 'MA3108': 4, 'MA3109': 4, 'PH3101': 4, 'PH3102': 4, 'PH3103': 4, 'PH3104': 4, 'PH3105': 4,
+    'CH4101': 4, 'CH4102': 4, 'CH4104': 4, 'CH4105': 4, 'CH4106': 4, 'CH4107': 4, 'CH4109': 4, 'CH4110': 4, 'CH4111': 4,
+    'CH4112': 4, 'CH4113': 4, 'CH4114': 4, 'CH4115': 4, 'CH4116': 4, 'CH4117': 4, 'CH4118': 4, 'CH4119': 8, 'CH4120': 4,
+    'CS4101': 4, 'ES4101': 4, 'ES4102': 4, 'ES4103': 4, 'ES4104': 4, 'ES4106': 4, 'ES4107': 4, 'ES4109': 4, 'HU4102': 4,
+    'LS4101': 4, 'LS4102': 4, 'LS4103': 4, 'LS4104': 4, 'LS4105': 4, 'LS4106': 4, 'LS4107': 4, 'LS4109': 4, 'LS4110': 12,
+    'MA4101': 4, 'MA4102': 4, 'MA4103': 4, 'MA4104': 4, 'MA4105': 4, 'MA4106': 4, 'MA4107': 4, 'PH4101': 4, 'PH4102': 4,
+    'PH4103': 4, 'PH4104': 4, 'PH4106': 4, 'PH4107': 4, 'PH4108': 4, 'SS4102': 9, 'CH5101': 20, 'CH5102': 4, 'CH5103': 4,
+    'CS5102': 4, 'ES5101': 24, 'ES5102': 4, 'ES5103': 8, 'LS5101': 4, 'LS5102': 20, 'LS5103': 4, 'MA5101': 8, 'MA5102': 4,
+    'MA5108': 4, 'MA5114': 4, 'MA5115': 4, 'MA5121': 4, 'PH5101': 20, 'PH5102': 4, 'PH5103': 4, 'PH5111': 8, 'SS5101': 18,
+    'CH5201': 24, 'ES5201': 24, 'ES5202': 4, 'ES5203': 12, 'LS5201': 24, 'MA5201': 12, 'MA5204': 4, 'MA5208': 4, 'MA5214': 4,
+    'MA5215': 4, 'PH5201': 24, 'PH5202': 16, 'CH4201': 4, 'CH4202': 4, 'CH4203': 4, 'CH4204': 4, 'CH4205': 4, 'CH4206': 4,
+    'CH4207': 4, 'CH4208': 4, 'CH4209': 4, 'CH4212': 4, 'CH4214': 4, 'CH4215': 4, 'CH4217': 4, 'CH4218': 4, 'CH4219': 4,
+    'CH4220': 4, 'CH4221': 16, 'CS4201': 4, 'ES4201': 4, 'ES4202': 4, 'ES4203': 4, 'ES4204': 4, 'ES4205': 4, 'ES4206': 4,
+    'ES4207': 4, 'ES4209': 4, 'LS4201': 4, 'LS4203': 4, 'LS4205': 4, 'LS4206': 4, 'LS4207': 4, 'LS4208': 4, 'LS4209': 4,
+    'LS4210': 12, 'MA4201': 4, 'MA4202': 4, 'MA4203': 4, 'MA4204': 4, 'MA4205': 4, 'MA4206': 4, 'MA4207': 4, 'MA4208': 4,
+    'MA4210': 4, 'MA4211': 4, 'PH4201': 4, 'PH4202': 4, 'PH4203': 4, 'PH4204': 4, 'PH4205': 4, 'PH4207': 4, 'PH4208': 4,
+    'PH4209': 4, 'PH4213': 4, 'SS4201': 4, 'SS4202': 4, 'CH3201': 4, 'CH3202': 4, 'CH3203': 4, 'CH3204': 4, 'CH3205': 4,
+    'CH3206': 4, 'CS3201': 4, 'ES3201': 4, 'ES3202': 4, 'ES3203': 4, 'ES3204': 4, 'ES3205': 4, 'HU3201': 4, 'HU3202': 4,
+    'LS3201': 4, 'LS3202': 4, 'LS3203': 4, 'LS3204': 4, 'LS3205': 4, 'LS3206': 4, 'MA3201': 4, 'MA3202': 4, 'MA3203': 4,
+    'MA3205': 4, 'MA3206': 4, 'PH3201': 4, 'PH3202': 4, 'PH3203': 4, 'PH3204': 4, 'PH3205': 4, 'CH2201': 2, 'CH2202': 3,
+    'CH2203': 3, 'CS2201': 3, 'ES2201': 4, 'ES2202': 4, 'LS2201': 2, 'LS2202': 3, 'LS2203': 3, 'MA2201': 4, 'MA2202': 4,
+    'PH2201': 3, 'PH2202': 2, 'PH2203': 3, 'CH1201': 3, 'CH1202': 3, 'ES1201': 4, 'LS1201': 3, 'MA1201': 4, 'PH1201': 3,
+    'PH1202': 3
+};
+
+const semesters = {
+    "sem1": ['CH1101', 'CS1101', 'ES1101', 'HU1101', 'HU1103', 'LS1101', 'LS1102', 'MA1101', 'PH1101'],
+    "sem2": ['CH1201', 'CH1202', 'ES1201', 'LS1201', 'MA1201', 'PH1201', 'PH1202'],
+    "sem3": ['CH2101', 'CH2102', 'CH2103', 'ES2101', 'ES2102', 'LS2101', 'LS2102', 'LS2103', 'MA2101', 'MA2102', 'MA2103', 'PH2101', 'PH2102', 'PH2103'],
+    "sem4": ['CH2201', 'CH2202', 'CH2203', 'CS2201', 'ES2201', 'ES2202', 'LS2201', 'LS2202', 'LS2203', 'MA2201', 'MA2202', 'PH2201', 'PH2202', 'PH2203'],
+    "sem5": ['CH3101', 'CH3102', 'CH3103', 'CH3104', 'CH3105', 'CH3106', 'CS3101', 'CS3102', 'ES3101', 'ES3102', 'ES3103', 'ES3104', 'ES3105', 'LS3101', 'LS3102', 'LS3103', 'LS3104', 'LS3105', 'LS3106', 'MA3101', 'MA3102', 'MA3103', 'MA3104', 'MA3105', 'MA3108', 'MA3109', 'PH3101', 'PH3102', 'PH3103', 'PH3104', 'PH3105'],
+    "sem6": ['CH3201', 'CH3202', 'CH3203', 'CH3204', 'CH3205', 'CH3206', 'CS3201', 'ES3201', 'ES3202', 'ES3203', 'ES3204', 'ES3205', 'HU3201', 'HU3202', 'LS3201', 'LS3202', 'LS3203', 'LS3204', 'LS3205', 'LS3206', 'MA3201', 'MA3202', 'MA3203', 'MA3205', 'MA3206', 'PH3201', 'PH3202', 'PH3203', 'PH3204', 'PH3205'],
+    "sem7": ['CH4101', 'CH4102', 'CH4104', 'CH4105', 'CH4106', 'CH4107', 'CH4109', 'CH4110', 'CH4111', 'CH4112', 'CH4113', 'CH4114', 'CH4115', 'CH4116', 'CH4117', 'CH4118', 'CH4119', 'CH4120', 'CS4101', 'ES4101', 'ES4102', 'ES4103', 'ES4104', 'ES4106', 'ES4107', 'ES4109', 'HU4102', 'LS4101', 'LS4102', 'LS4103', 'LS4104', 'LS4105', 'LS4106', 'LS4107', 'LS4109', 'LS4110', 'MA4101', 'MA4102', 'MA4103', 'MA4104', 'MA4105', 'MA4106', 'MA4107', 'PH4101', 'PH4102', 'PH4103', 'PH4104', 'PH4106', 'PH4107', 'PH4108', 'SS4102'],
+    "sem8": ['CH4201', 'CH4202', 'CH4203', 'CH4204', 'CH4205', 'CH4206', 'CH4207', 'CH4208', 'CH4209', 'CH4212', 'CH4214', 'CH4215', 'CH4217', 'CH4218', 'CH4219', 'CH4220', 'CH4221', 'CS4201', 'ES4201', 'ES4202', 'ES4203', 'ES4204', 'ES4205', 'ES4206', 'ES4207', 'ES4209', 'LS4201', 'LS4203', 'LS4205', 'LS4206', 'LS4207', 'LS4208', 'LS4209', 'LS4210', 'MA4201', 'MA4202', 'MA4203', 'MA4204', 'MA4205', 'MA4206', 'MA4207', 'MA4208', 'MA4210', 'MA4211', 'PH4201', 'PH4202', 'PH4203', 'PH4204', 'PH4205', 'PH4207', 'PH4208', 'PH4209', 'PH4213', 'SS4201', 'SS4202'],
+    "sem9": ['CH5101', 'CH5102', 'CH5103', 'CS5102', 'ES5101', 'ES5102', 'ES5103', 'LS5101', 'LS5102', 'LS5103', 'MA5101', 'MA5102', 'MA5108', 'MA5114', 'MA5115', 'MA5121', 'PH5101', 'PH5102', 'PH5103', 'PH5111', 'SS5101'],
+    "sem10": ['CH5201', 'ES5201', 'ES5202', 'ES5203', 'LS5201', 'MA5201', 'MA5204', 'MA5208', 'MA5214', 'MA5215', 'PH5201', 'PH5202']
+};
+
+        const realVal = {
+            "a+": 10, "a": 9, "b+": 8, "b": 7, "c": 6, "d": 5, "f": 0, "0": "dontcount"
+        };
+
+        function displayCourses() {
+      const semester = document.getElementById('semester').value;
+      const coursesContainer = document.getElementById('courses-container');
+      coursesContainer.innerHTML = '';
+
+      semesters[semester].forEach(course => {
+        const courseDiv = document.createElement('div');
+        courseDiv.classList.add('course-grade');
+        courseDiv.innerHTML = `
+            <label for="${course}">${course}:</label>
+            <select id="${course}">
+                <option value="a+">A+</option>
+                <option value="a">A</option>
+                <option value="b+">B+</option>
+                <option value="b">B</option>
+                <option value="c">C</option>
+                <option value="d">D</option>
+                <option value="f">F</option>
+                <option value="0">0</option>
+            </select>
+        `;
+        coursesContainer.appendChild(courseDiv);
+      });
+    }
+
+    function calculateSGPA() {
+      const semester = document.getElementById('semester').value;
+      let totalCredits = 0;
+      let totalWeightedMarks = 0;
+      let isValid = true;
+
+      semesters[semester].forEach(course => {
+        const grade = document.getElementById(course).value.toLowerCase();
+        const gradeValue = realVal[grade];
+        if (gradeValue !== "dontcount") {
+          const credits = combined_credits[course];
+          totalCredits += credits;
+          totalWeightedMarks += gradeValue * credits;
+        }
+      });
+
+      if (totalCredits === 0) {
+        alert('Please select valid grades for all courses.');
+        isValid = false;
+      }
+
+      if (isValid) {
+        const sgpa = totalWeightedMarks / totalCredits;
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = `
+              <p>Your SGPA for ${semester.toUpperCase()} is <strong>${sgpa.toFixed(2)}</strong></p>
+              <p>Total credits this semester: <strong>${totalCredits}</strong></p>
+          `;
+        resultDiv.classList.remove('hidden');
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('semester').value = 'sem1';
+      displayCourses(); // Call displayCourses to re-render the courses
+      document.getElementById('result').classList.add('hidden');
+    }
+
+    // Initialize form with default semester courses
+    displayCourses();
+  </script>
+</body>
+</html>
